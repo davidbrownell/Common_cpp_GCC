@@ -17,3 +17,5 @@ Activate.*.sh
 coverage.xml
 
 .vscode/*
+
+Tools/gcc/v9.1.0/Linux/*
