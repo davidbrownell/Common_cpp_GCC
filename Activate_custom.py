@@ -95,7 +95,7 @@ def GetCustomActions(
             version_specs.Tools,
             _script_dir,
             "Tools",
-            "GCC",
+            "gcc",
         )
 
         if gcc_version.startswith("v"):
