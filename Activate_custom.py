@@ -109,15 +109,27 @@ def GetCustomActions(
         ]
 
         # Add the include dirs
-        include_dir = os.path.join(
-            gcc_dir,
-            "include",
-            "c++",
-            gcc_version,
-        )
-        assert os.path.isdir(include_dir), include_dir
+        include_dirs = []
 
-        actions += [CurrentShell.Commands.Augment("INCLUDE", include_dir)]
+        include_dirs.append(
+            os.path.join(
+                gcc_dir,
+                "include",
+                "c++",
+                gcc_version,
+            ),
+        )
+        assert os.path.isdir(include_dirs[-1]), include_dirs[-1]
+
+        include_dirs.append(
+            os.path.join(
+                include_dirs[-1],
+                "x86_64-pc-linux-gnu",
+            ),
+        )
+        assert os.path.isdir(include_dirs[-1]), include_dirs[-1]
+        
+        actions += [CurrentShell.Commands.Augment("INCLUDE", include_dirs)]
 
     return actions
 
