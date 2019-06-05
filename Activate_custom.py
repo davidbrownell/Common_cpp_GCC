@@ -19,6 +19,7 @@ import sys
 
 sys.path.insert(0, os.getenv("DEVELOPMENT_ENVIRONMENT_FUNDAMENTAL"))
 from RepositoryBootstrap.SetupAndActivate import CommonEnvironment, CurrentShell
+from RepositoryBootstrap.Impl.ActivationActivity import ActivationActivity
 
 del sys.path[0]
 
@@ -89,6 +90,34 @@ def GetCustomActions(
                     ),
                 ),
             ]
+
+        gcc_dir, gcc_version = ActivationActivity.GetVersionedDirectoryEx(
+            version_specs.Tools,
+            _script_dir,
+            "Tools",
+            "GCC",
+        )
+
+        if gcc_version.startswith("v"):
+            gcc_version = gcc_version[1:]
+
+        # Set the compiler
+        actions += [
+            CurrentShell.Commands.Set("DEVELOPMENT_ENVIRONMENT_CPP_COMPILER_NAME", "GCC-{}".format(gcc_version.split(".", 1)[0])),
+            CurrentShell.Commands.Set("CXX", "gcc"),
+            CurrentShell.Commands.Set("CC", "gcc"),
+        ]
+
+        # Add the include dirs
+        include_dir = os.path.join(
+            gcc_dir,
+            "include",
+            "c++",
+            gcc_version,
+        )
+        assert os.path.isdir(include_dir), include_dir
+
+        actions += [CurrentShell.Commands.Augment("INCLUDE", include_dir)]
 
     return actions
 
