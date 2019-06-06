@@ -52,6 +52,8 @@ from RepositoryBootstrap.SetupAndActivate.Configuration import *            # <U
 
 del sys.path[0]
 
+from _custom_data import _CUSTOM_DATA
+
 # ----------------------------------------------------------------------
 # There are two types of repositories: Standard and Mixin. Only one standard
 # repository may be activated within an environment at a time while any number
@@ -94,17 +96,34 @@ def GetDependencies():
     (aka is configurable) or a single Configuration if not.
     """
 
-    return Configuration(
-        "GCC",
-        [
+    dependencies = []
+
+    if CurrentShell.CategoryName != "Linux":
+        dependencies.append(
+            Dependency(
+                "0EAA1DCF22804F90AD9F5A3B85A5D706",
+                "Common_Environment",
+                "python36",
+                "https://github.com/davidbrownell/Common_Environment_v3.git",
+            ),
+        )
+    else:
+        dependencies += [
             Dependency(
                 "F33C43DA6BB54336A7573B39509CDAD7",
                 "Common_cpp_Common",
                 "x64",
                 "https://github.com/davidbrownell/Common_cpp_Common.git",
             ),
-        ],
-    )
+            Dependency(
+                "F9A2CBD787E349F09A1EC3B675E54DAE",
+                "Common_cpp_binutils",
+                None,
+                "https://github.com/davidbrownell/Common_cpp_binutils.git",
+            ),
+        ]
+
+    return Configuration("GCC", dependencies)
 
 
 # ----------------------------------------------------------------------
@@ -118,4 +137,66 @@ def GetCustomActions(debug, verbose, explicit_configurations):
     cases, this is Bash on Linux systems and Batch or PowerShell on Windows systems.
     """
 
-    return []
+    if CurrentShell.CategoryName != "Linux":
+        return []
+
+    actions = []
+
+    for name, version, path_parts in _CUSTOM_DATA:
+        this_dir = os.path.join(*([_script_dir] + path_parts))
+        assert os.path.isdir(this_dir), this_dir
+
+        install_filename = os.path.join(this_dir, "Install.7z")
+
+        # Reconstruct the binary
+        if not os.path.isfile(install_filename):
+            remove_install_file = True
+
+            actions += [
+                CurrentShell.Commands.Execute(
+                    'python "{script}" Reconstruct "{filename}"'.format(
+                        script=os.path.join(
+                            os.getenv("DEVELOPMENT_ENVIRONMENT_FUNDAMENTAL"),
+                            "RepositoryBootstrap",
+                            "SetupAndActivate",
+                            "LargeFileSupport.py",
+                        ),
+                        filename=os.path.join(this_dir, "_Install.7z.001"),
+                    ),
+                )
+            ]
+        else:
+            remove_install_file = False
+
+        # Install the file
+        actions += [
+            CurrentShell.Commands.Execute(
+                'python "{script}" Install "{name}" "{uri}" "{dir}" "/unique_id={version}" /unique_id_is_hash'.format(
+                    script=os.path.join(
+                        os.getenv("DEVELOPMENT_ENVIRONMENT_FUNDAMENTAL"),
+                        "RepositoryBootstrap",
+                        "SetupAndActivate",
+                        "AcquireBinaries.py",
+                    ),
+                    name=name,
+                    uri=CommonEnvironmentImports.FileSystem.FilenameToUri(install_filename).replace(
+                        "%",
+                        "%%",
+                    ),
+                    dir=this_dir,
+                    version=version,
+                ),
+                exit_on_error=not remove_install_file,
+            )
+        ]
+
+        if remove_install_file:
+            actions += [
+                CurrentShell.Commands.PersistError("_setup_error"),
+                CurrentShell.Commands.Delete(install_filename),
+                CurrentShell.Commands.ExitOnError(
+                    variable_name="_setup_error",
+                ),
+            ]
+
+    return actions
