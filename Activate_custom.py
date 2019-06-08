@@ -129,6 +129,18 @@ def GetCustomActions(
         )
         assert os.path.isdir(include_dirs[-1]), include_dirs[-1]
         
+        include_dirs.append(
+            os.path.join(
+                gcc_dir,
+                "lib",
+                "gcc",
+                "x86_64-pc-linux-gnu",
+                gcc_version,
+                "include",
+            ),
+        )
+        assert os.path.isdir(include_dirs[-1]), include_dirs[-1]
+
         actions += [CurrentShell.Commands.Augment("INCLUDE", include_dirs)]
 
     return actions
