@@ -115,12 +115,6 @@ def GetDependencies():
                 "x64",
                 "https://github.com/davidbrownell/Common_cpp_Common.git",
             ),
-            Dependency(
-                "F9A2CBD787E349F09A1EC3B675E54DAE",
-                "Common_cpp_binutils",
-                None,
-                "https://github.com/davidbrownell/Common_cpp_binutils.git",
-            ),
         ]
 
     return Configuration("GCC", dependencies)
@@ -131,7 +125,7 @@ def GetCustomActions(debug, verbose, explicit_configurations):
     """
     Returns an action or list of actions that should be invoked as part of the setup process.
 
-    Actions are generic command line statements defined in 
+    Actions are generic command line statements defined in
     <Common_Environment>/Libraries/Python/CommonEnvironment/v1.0/CommonEnvironment/Shell/Commands/__init__.py
     that are converted into statements appropriate for the current scripting language (in most
     cases, this is Bash on Linux systems and Batch or PowerShell on Windows systems.
